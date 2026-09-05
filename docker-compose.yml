@@ -1,0 +1,16 @@
+services:
+  app:
+    image: ghcr.io/zzy/raolv:latest
+    restart: always
+    ports:
+      - "7700:7700"
+    env_file:
+      - .env
+    volumes:
+      - /root/raolv-uploads:/app/data/media
+    networks:
+      - surrealdb_net
+
+networks:
+  surrealdb_net:
+    external: true
