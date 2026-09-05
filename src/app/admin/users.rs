@@ -70,8 +70,19 @@ pub async fn admin_users_list(cx: &Cx) -> Result<impl View> {
                 </p>
             } else {
                 <div class="space-y-2">
-                    for (user, (lc, (tok, cur))) in user_list.into_iter().zip(locales.into_iter().zip(csrfs.into_iter().zip(current_names))) {
-                        AdminUserRow(locale: lc, user: user, csrf: tok, current_username: cur)
+                    for (user, (lc, (tok, cur))) in user_list
+                        .into_iter()
+                        .zip(
+                            locales
+                                .into_iter()
+                                .zip(csrfs.into_iter().zip(current_names)),
+                        ) {
+                        AdminUserRow(
+                            locale: lc,
+                            user: user,
+                            csrf: tok,
+                            current_username: cur
+                        )
                     }
                 </div>
                 components::pagination::Pagination(
@@ -115,7 +126,9 @@ async fn AdminUserRow(locale: String, user: User, csrf: String, current_username
     let ban_csrf = csrf.clone();
     let role_csrf = csrf;
     Ok(view! {
-        <div class="bg-surface border border-border rounded-lg p-4 flex flex-wrap items-center gap-3">
+        <div
+            class="bg-surface border border-border rounded-lg p-4 flex flex-wrap items-center gap-3"
+        >
             <div class="min-w-0 flex-1">
                 <div class="text-sm font-medium text-foreground truncate">
                     (user.username)
@@ -157,7 +170,10 @@ async fn AdminUserRow(locale: String, user: User, csrf: String, current_username
                                 type="submit"
                                 name="role"
                                 value="user"
-                                class=(button_variants(ButtonVariant::Secondary, ButtonSize::Sm))
+                                class=(button_variants(
+                                    ButtonVariant::Secondary,
+                                    ButtonSize::Sm,
+                                ))
                             >
                                 (loader::t(&locale, "admin_user_demote"))
                             </button>
@@ -182,7 +198,10 @@ async fn AdminUserRow(locale: String, user: User, csrf: String, current_username
                             type="submit"
                             name="role"
                             value="admin"
-                            class=(button_variants(ButtonVariant::Secondary, ButtonSize::Sm))
+                            class=(button_variants(
+                                ButtonVariant::Secondary,
+                                ButtonSize::Sm,
+                            ))
                         >
                             (loader::t(&locale, "admin_user_promote"))
                         </button>

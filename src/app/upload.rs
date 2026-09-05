@@ -58,7 +58,9 @@ pub async fn upload_page(cx: &Cx) -> Result<impl View> {
                         <select
                             name="post_type"
                             class="h-9 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-sm shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
-                            onchange=(format!("var b=document.getElementById('body-section');var f=document.getElementById('file-section');var t=this.value;b.style.display=t==='article'?'':'none';f.style.display=t==='article'?'none':''"))
+                            onchange=(format!(
+                                "var b=document.getElementById('body-section');var f=document.getElementById('file-section');var t=this.value;b.style.display=t==='article'?'':'none';f.style.display=t==='article'?'none':''",
+                            ))
                         >
                             <option value="video">
                                 (loader::t(&locale, "post_type_video"))

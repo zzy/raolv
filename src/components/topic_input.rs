@@ -30,7 +30,9 @@ pub async fn TopicInput(locale: String) -> Result<impl View> {
             <input type="hidden" name="topics" id="topic-input-hidden" value="">
         </div>
         <script>
-            (format!("var topicList=[];function addTopic(n,tags){{n=n.toLowerCase().trim();if(!n||topicList.includes(n))return;topicList.push(n);var s=document.createElement('span');s.className='badge-blue inline-flex items-center gap-1 text-xs';s.innerHTML=n+'<button type=\"button\" class=\"ml-0.5 text-blue-500 hover:text-red-500 font-bold leading-none cursor-pointer border-0 bg-transparent p-0 text-base\" onclick=\"this.parentElement.remove();var i=topicList.indexOf(\\''+n+'\\');if(i>-1)topicList.splice(i,1);updateTopicInput()\">×</button>';tags.appendChild(s);updateTopicInput()}}function updateTopicInput(){{document.getElementById('topic-input-hidden').value=topicList.join(',')}}"))
+            (format!(
+                "var topicList=[];function addTopic(n,tags){{n=n.toLowerCase().trim();if(!n||topicList.includes(n))return;topicList.push(n);var s=document.createElement('span');s.className='badge-blue inline-flex items-center gap-1 text-xs';s.innerHTML=n+'<button type=\"button\" class=\"ml-0.5 text-blue-500 hover:text-red-500 font-bold leading-none cursor-pointer border-0 bg-transparent p-0 text-base\" onclick=\"this.parentElement.remove();var i=topicList.indexOf(\\''+n+'\\');if(i>-1)topicList.splice(i,1);updateTopicInput()\">×</button>';tags.appendChild(s);updateTopicInput()}}function updateTopicInput(){{document.getElementById('topic-input-hidden').value=topicList.join(',')}}",
+            ))
         </script>
     })
 }

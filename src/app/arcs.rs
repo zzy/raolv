@@ -295,7 +295,10 @@ pub async fn arc_detail(cx: &Cx) -> Result<impl View> {
                             variant: ButtonVariant::Destructive,
                             attrs: attributes! {
                                 type="submit"
-                                onclick=(format!("return confirm('{}')", loader::t(&locale, "arc_delete_confirm")))
+                                onclick=(format!(
+                                    "return confirm('{}')",
+                                    loader::t(&locale, "arc_delete_confirm"),
+                                ))
                             },
                             (loader::t(&locale, "arc_delete"))
                         )
@@ -306,12 +309,12 @@ pub async fn arc_detail(cx: &Cx) -> Result<impl View> {
                         <div
                             class="aspect-video bg-black rounded-lg overflow-hidden mb-6"
                         >
-                            crate::components::hls_player::HlsPlayer(src: media_url.clone())
+                            crate::components::hls_player::HlsPlayer(
+                                src: media_url.clone()
+                            )
                         </div>
                     } else if arc.arc_type.as_str() == "photo" {
-                        <div
-                            class="bg-white rounded-lg overflow-hidden mb-6"
-                        >
+                        <div class="bg-white rounded-lg overflow-hidden mb-6">
                             <img
                                 src=(media_url.clone())
                                 alt=""
@@ -334,9 +337,7 @@ pub async fn arc_detail(cx: &Cx) -> Result<impl View> {
                 if let Some(ref html) = body_html {
                     card(
                         attrs: attributes! { class="p-6 prose-sm" },
-                        (topcoat::view::Unescaped::new_unchecked(
-                            html.clone(),
-                        ))
+                        (topcoat::view::Unescaped::new_unchecked(html.clone()))
                     )
                 }
                 crate::components::hls_player::HlsScan()

@@ -17,18 +17,14 @@ use topcoat::{
 #[topcoat::router::page("/")]
 pub async fn home_root(cx: &Cx) -> Result<impl View> {
     let locale = loader::detect(cx);
-    Ok(view! {
-        HomeContent(locale: locale)
-    })
+    Ok(view! { HomeContent(locale: locale) })
 }
 
 /// 语言路径首页（路径段是唯一权威语言入口）
 #[topcoat::router::page("/{locale}")]
 pub async fn locale_home(cx: &Cx) -> Result<impl View> {
     let locale = path_param_segment(cx, "locale").to_string();
-    Ok(view! {
-        HomeContent(locale: locale)
-    })
+    Ok(view! { HomeContent(locale: locale) })
 }
 
 #[component]
