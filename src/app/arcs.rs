@@ -19,7 +19,7 @@ use topcoat::{
         content::Form, error::{bad_request, forbidden}, page, path_param_segment, query_params,
         response::Response,
     },
-    runtime::{Event, shard},
+    runtime::{Event, shard, signal},
     view::{View, attributes, class, component, view},
 };
 
@@ -56,9 +56,8 @@ async fn ArcsContent(cx: &Cx, type_key: String) -> Result<impl View> {
         .and_then(|p| p.q.as_deref())
         .unwrap_or("")
         .to_string();
+    let query = signal(cx, move || initial_q);
     Ok(view! {
-        signal query = initial_q;
-
         <div class="max-w-6xl mx-auto px-4 py-8">
             <h1 class="text-xl font-bold mb-6 text-foreground">
                 (loader::t(
@@ -219,11 +218,11 @@ async fn arc_grid(cx: &Cx, query: String, type_key: String) -> Result<impl View>
     })
 }
 
-#[page("/{locale}/arc/{id}")]
+#[page("/{locale}/arc/{slug}")]
 pub async fn arc_detail(cx: &Cx) -> Result<impl View> {
     let locale = path_param_segment(cx, "locale");
-    let id = path_param_segment(cx, "id");
-    let found = arcs::get_arc_by_id(&id).await.ok().flatten();
+    let slug = path_param_segment(cx, "slug");
+    let found = arcs::get_arc_by_slug(&slug).await.ok().flatten();
     let body_html = found
         .as_ref()
         .and_then(|e| e.body.as_deref())

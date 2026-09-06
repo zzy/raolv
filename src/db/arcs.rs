@@ -103,6 +103,75 @@ pub async fn get_arc_by_id(id: &str) -> Result<Option<Arc>, String> {
     .await
 }
 
+pub async fn get_arc_by_slug(slug: &str) -> Result<Option<Arc>, String> {
+    db::query_one(
+        "SELECT *, id.id() AS id FROM arc WHERE slug = $slug",
+        &[("slug", slug.to_string().into_value())],
+    )
+    .await
+}
+
+/// slug 合法性：小写字母/数字/连字符，不以连字符开头或结尾，长度 2..=64
+pub fn valid_slug(slug: &str) -> bool {
+    let len = slug.len();
+    if !(2..=64).contains(&len) {
+        return false;
+    }
+    let first = slug.chars().next().unwrap_or_default();
+    let last = slug.chars().last().unwrap_or_default();
+    if first == '-' || last == '-' {
+        return false;
+    }
+    slug.chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// slug 是否已被占用
+pub async fn slug_exists(slug: &str) -> Result<bool, String> {
+    let found = db::query_one::<serde_json::Value>(
+        "SELECT id FROM arc WHERE slug = $slug",
+        &[("slug", slug.to_string().into_value())],
+    )
+    .await?
+    .is_some();
+    Ok(found)
+}
+
+/// 标题 → slug 候选：小写、非字母数字转连字符、去首尾连字符（中文标题等会得到空串）
+pub fn slugify_title(title: &str) -> String {
+    let mut out = String::with_capacity(title.len());
+    let mut last_dash = false;
+    for ch in title.chars().flat_map(char::to_lowercase) {
+        if ch.is_ascii_alphanumeric() {
+            out.push(ch);
+            last_dash = false;
+        } else if !last_dash && !out.is_empty() {
+            out.push('-');
+            last_dash = true;
+        }
+    }
+    while out.ends_with('-') {
+        out.pop();
+    }
+    out
+}
+
+/// 唯一 slug：候选非法或已被占用时，追加随机后缀（连字符连接）保证可用
+pub async fn unique_slug(base: &str) -> String {
+    let suffix = || crate::common::rand::random_hex().chars().take(6).collect::<String>();
+    let mut candidate = if valid_slug(base) {
+        base.to_string()
+    } else {
+        suffix()
+    };
+    loop {
+        if !slug_exists(&candidate).await.unwrap_or(false) {
+            return candidate;
+        }
+        candidate = format!("{candidate}-{}", suffix());
+    }
+}
+
 pub async fn get_arcs_by_author(
     author_name: &str,
     page: u64,
@@ -132,7 +201,7 @@ pub async fn count_arcs_by_author(author_name: &str) -> Result<u64, String> {
 }
 
 pub async fn create_arc(
-    id: &str,
+    slug: &str,
     title: &str,
     arc_type: &str,
     media_url: &str,
@@ -141,11 +210,13 @@ pub async fn create_arc(
     author_name: Option<&str>,
     thumbnail: Option<&str>,
 ) -> Result<(), String> {
+    let id = db::new_record_key();
     let db = db::get_db();
     db.query(
-        "CREATE arc CONTENT { id: type::record('arc', $id), title: $title, arc_type: $arc_type, media_url: $media_url, body: $body, topics: $topics, author_name: $author_name, thumbnail: $thumbnail, created_at: time::now(), view_count: 0 }",
+        "CREATE arc CONTENT { id: type::record('arc', $id), slug: $slug, title: $title, arc_type: $arc_type, media_url: $media_url, body: $body, topics: $topics, author_name: $author_name, thumbnail: $thumbnail, created_at: time::now(), view_count: 0 }",
     )
-    .bind(("id", id.to_string()))
+    .bind(("id", id))
+    .bind(("slug", slug.to_string()))
     .bind(("title", title.to_string()))
     .bind(("arc_type", arc_type.to_string()))
     .bind(("media_url", media_url.to_string()))
@@ -219,7 +290,7 @@ struct SeedArc {
 /// 9 个演示条目（3 图文 / 3 视频 / 3 照片；缩略图 picsum 占位，视频为公开样例片源）
 const SEED_ARCS: [SeedArc; 9] = [
     SeedArc {
-        slug: "morning_at_the_harbor",
+        slug: "morning-at-the-harbor",
         title: "Morning at the Harbor",
         arc_type: "article",
         media_url: None,
@@ -227,7 +298,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "life, city",
     },
     SeedArc {
-        slug: "the_old_bookstore",
+        slug: "the-old-bookstore",
         title: "The Old Bookstore",
         arc_type: "article",
         media_url: None,
@@ -235,7 +306,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "culture, city",
     },
     SeedArc {
-        slug: "a_walk_in_autumn",
+        slug: "a-walk-in-autumn",
         title: "A Walk in Autumn",
         arc_type: "article",
         media_url: None,
@@ -243,7 +314,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "life, nature",
     },
     SeedArc {
-        slug: "big_buck_bunny",
+        slug: "big-buck-bunny",
         title: "Big Buck Bunny",
         arc_type: "video",
         media_url: Some("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"),
@@ -251,7 +322,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "animation, video",
     },
     SeedArc {
-        slug: "sintel_trailer",
+        slug: "sintel-trailer",
         title: "Sintel Trailer",
         arc_type: "video",
         media_url: Some("https://media.w3.org/2010/05/sintel/trailer.mp4"),
@@ -259,7 +330,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "film, video",
     },
     SeedArc {
-        slug: "elephants_dream",
+        slug: "elephants-dream",
         title: "Elephants Dream",
         arc_type: "video",
         media_url: Some("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"),
@@ -267,7 +338,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "animation, video",
     },
     SeedArc {
-        slug: "golden_hour",
+        slug: "golden-hour",
         title: "Golden Hour",
         arc_type: "photo",
         media_url: Some("https://picsum.photos/seed/golden_hour/1200/800"),
@@ -275,7 +346,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "photo, nature",
     },
     SeedArc {
-        slug: "rainy_window",
+        slug: "rainy-window",
         title: "Rainy Window",
         arc_type: "photo",
         media_url: Some("https://picsum.photos/seed/rainy_window/1200/800"),
@@ -283,7 +354,7 @@ const SEED_ARCS: [SeedArc; 9] = [
         topics: "photo, city",
     },
     SeedArc {
-        slug: "mountain_mist",
+        slug: "mountain-mist",
         title: "Mountain Mist",
         arc_type: "photo",
         media_url: Some("https://picsum.photos/seed/mountain_mist/1200/800"),
@@ -306,7 +377,7 @@ pub async fn seed_arcs() -> Result<(), String> {
     for item in SEED_ARCS {
         let thumbnail = format!("https://picsum.photos/seed/{}/800/600", item.slug);
         create_arc(
-            &format!("seed_{}", item.slug),
+            item.slug,
             item.title,
             item.arc_type,
             item.media_url.unwrap_or(""),

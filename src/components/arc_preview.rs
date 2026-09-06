@@ -18,7 +18,7 @@ pub async fn ArcPreview(locale: String, arc: Arc) -> Result<impl View> {
     };
     let created_date: String = arc.created_at.chars().take(10).collect();
     // view! 生成异步闭包：借用与移动不可共存，统一提取 owned 值
-    let href = format!("/{locale}/arc/{}", arc.id);
+    let href = format!("/{locale}/arc/{}", arc.slug);
     let title = arc.title.clone();
     let author = arc.author_name.clone().unwrap_or_default();
     let type_label = match arc.arc_type.as_str() {

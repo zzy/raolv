@@ -35,6 +35,7 @@ pub async fn ensure_tables() -> Result<(), String> {
     db.query(
         "DEFINE TABLE IF NOT EXISTS arc SCHEMAFULL;
          DEFINE FIELD IF NOT EXISTS title ON arc TYPE string;
+         DEFINE FIELD IF NOT EXISTS slug ON arc TYPE string;
          DEFINE FIELD IF NOT EXISTS arc_type ON arc TYPE string;
          DEFINE FIELD IF NOT EXISTS body ON arc TYPE option<string>;
          DEFINE FIELD IF NOT EXISTS summary ON arc TYPE option<string>;

@@ -24,6 +24,8 @@ impl ArcType {
 pub struct Arc {
     pub id: String,
     pub title: String,
+    /// URL 段（英文 slug）
+    pub slug: String,
     #[serde(rename = "arc_type")]
     pub arc_type: ArcType,
     pub body: Option<String>,

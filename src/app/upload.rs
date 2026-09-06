@@ -1,5 +1,3 @@
-use crate::db;
-
 use crate::common::auth;
 use crate::common::media;
 use crate::common::session;
@@ -149,8 +147,8 @@ pub async fn upload_handler(cx: &Cx, mut form_data: Multipart) -> Result<SeeOthe
             return Err(bad_request(loader::t(&locale, "upload_no_file")).into());
         }
     };
-    // 32 位 hex：DB key（无引号字符，可安全往返）
-    let id = db::new_record_key();
+    // 标题转 slug；非法（如纯中文标题）或占用时自动补随机后缀
+    let slug = arcs::unique_slug(&arcs::slugify_title(&title)).await;
     let media_url = if file_bytes.is_empty() {
         String::new()
     } else {
@@ -193,7 +191,7 @@ pub async fn upload_handler(cx: &Cx, mut form_data: Multipart) -> Result<SeeOthe
         Some(author.as_str())
     };
     match arcs::create_arc(
-        &id,
+        &slug,
         &title,
         &content_type,
         &media_url,
