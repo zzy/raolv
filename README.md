@@ -1,4 +1,6 @@
-# RaoLv ( 饶旅, Journeys & Beyond )
+# RaoLv - 饶旅
+
+> 饶 (ráo, rich, abundant, fulfilled), 旅 (lv̌/lǚ, trip, travel, journey).
 
 A media content management site for articles, videos, photos, etc - built on [topcoat](https://github.com/tokio-rs/topcoat) and [surrealdb](https://surrealdb.com/) — all Rust, single binary.
 
